@@ -4,7 +4,7 @@ import TaskTree from "./components/TaskTree";
 import Controls from "./components/Controls";
 
 export default function App() {
-  const { tasks, addTask, deleteTask, undoAction, redoAction, historyState } =
+  const { tasks, addTask, deleteTask, undoAction, redoAction, historyState, generateAI, isGeneratingAI } =
     useTaskManager();
 
   return (
@@ -16,7 +16,7 @@ export default function App() {
 
         <TaskInput tasks={tasks} onAdd={addTask} />
 
-        <Controls undo={undoAction} redo={redoAction} />
+        <Controls undo={undoAction} redo={redoAction} generateAI={generateAI} isGeneratingAI={isGeneratingAI} />
 
         <input
           type="range"

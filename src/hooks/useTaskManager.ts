@@ -5,6 +5,8 @@ import { pushState, undo, redo } from "../domain/history";
 import type { History } from "../domain/history";
 
 export const useTaskManager = () => {
+const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
   const [historyState, setHistoryState] = useState<History<Task[]>>({
     states: [[]],
     index: 0,
@@ -39,6 +41,51 @@ export const useTaskManager = () => {
     setHistoryState(prev => redo(prev));
   };
 
+ const generateAITasks = async () => {
+  await new Promise((res) => setTimeout(res, 2000));
+
+  const aiTasks = [
+    "Break down project requirements",
+    "Write API design",
+    "Implement core logic",
+    "Add tests",
+  ];
+
+  return aiTasks;
+};
+
+// const generateAI = async () => {
+//   const aiTasks = await generateAITasks();
+
+//   const formattedTasks = aiTasks.map((title) => ({
+//     id: crypto.randomUUID(),
+//     title,
+//     parentId: null,
+//   }));
+
+//   commit([...tasks, ...formattedTasks]);
+// };
+
+const generateAI = async () => {
+  if (isGeneratingAI) return; // prevent spam clicks
+
+  setIsGeneratingAI(true);
+
+  try {
+    const aiTasks = await generateAITasks();
+
+    const formattedTasks = aiTasks.map((title) => ({
+      id: crypto.randomUUID(),
+      title,
+      parentId: null,
+    }));
+
+    commit([...tasks, ...formattedTasks]);
+  } finally {
+    setIsGeneratingAI(false);
+  }
+};
+
   return {
     tasks,
     addTask,
@@ -46,5 +93,7 @@ export const useTaskManager = () => {
     undoAction,
     redoAction,
     historyState,
+    generateAI,
+    isGeneratingAI,
   };
 };

@@ -24,3 +24,10 @@ export const redo = <T,>(history: History<T>): History<T> => ({
   ...history,
   index: Math.min(history.states.length - 1, history.index + 1),
 });
+
+export const generateAITask = <T,>(history: History<T>, aiFunc: (current: T) => T): History<T> => {
+  const currentState = history.states[history.index];
+  const newState = aiFunc(currentState);
+  return pushState(history, newState);
+};
+
