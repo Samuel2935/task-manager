@@ -4,6 +4,7 @@ import { removeTaskCascade } from "../domain/dependency";
 import { pushState, undo, redo } from "../domain/history";
 import type { History } from "../domain/history";
 
+
 export const useTaskManager = () => {
 const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -54,18 +55,6 @@ const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   return aiTasks;
 };
 
-// const generateAI = async () => {
-//   const aiTasks = await generateAITasks();
-
-//   const formattedTasks = aiTasks.map((title) => ({
-//     id: crypto.randomUUID(),
-//     title,
-//     parentId: null,
-//   }));
-
-//   commit([...tasks, ...formattedTasks]);
-// };
-
 const generateAI = async () => {
   if (isGeneratingAI) return; // prevent spam clicks
 
@@ -85,6 +74,30 @@ const generateAI = async () => {
     setIsGeneratingAI(false);
   }
 };
+
+// Real AI generation code using OpenAI API
+
+// const generateAI = async () => {
+//   if (isGeneratingAI) return;
+
+//   setIsGeneratingAI(true);
+
+//   try {
+//     const aiTasks = await generateAITasks();
+
+//     const formattedTasks = aiTasks.map((title) => ({
+//       id: crypto.randomUUID(),
+//       title,
+//       parentId: null,
+//     }));
+
+//     commit([...tasks, ...formattedTasks]);
+//   } catch (error) {
+//     console.error("AI Error:", error);
+//   } finally {
+//     setIsGeneratingAI(false);
+//   }
+// };
 
   return {
     tasks,
