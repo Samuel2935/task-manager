@@ -1,27 +1,36 @@
 export const generateAITasks = async (): Promise<string[]> => {
-  const res = await fetch("https://api.openai.com/v1/responses", {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+      Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      input:
-        "Return ONLY a JSON array of 5 short software development task strings.",
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: "Return ONLY a JSON array of 5 short task strings.",
+        },
+        {
+          role: "user",
+          content: "Generate 5 software development tasks.",
+        },
+      ],
+      temperature: 0.7,
     }),
   });
 
   if (!res.ok) {
-    throw new Error("AI request failed");
+    throw new Error("Groq request failed");
   }
 
   const data = await res.json();
 
-  // 🧠 Extract raw text
-  const text = data.output?.[0]?.content?.[0]?.text || "[]";
+  const text =
+    data.choices?.[0]?.message?.content || "[]";
 
-  // 🧠 Parse JSON safely
+  // safe parse
   try {
     const parsed = JSON.parse(text);
     return Array.isArray(parsed) ? parsed : [];

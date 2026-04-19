@@ -3,6 +3,7 @@ import type { Task } from "../domain/task.types";
 import { removeTaskCascade } from "../domain/dependency";
 import { pushState, undo, redo } from "../domain/history";
 import type { History } from "../domain/history";
+import { generateAITasks } from "../services/ai";
 
 
 export const useTaskManager = () => {
@@ -42,40 +43,21 @@ const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     setHistoryState(prev => redo(prev));
   };
 
- const generateAITasks = async () => {
-  await new Promise((res) => setTimeout(res, 2000));
 
-  const aiTasks = [
-    "Break down project requirements",
-    "Write API design",
-    "Implement core logic",
-    "Add tests",
-  ];
 
-  return aiTasks;
-};
+//  const generateAITasks = async () => {
+//   await new Promise((res) => setTimeout(res, 2000));
 
-const generateAI = async () => {
-  if (isGeneratingAI) return; // prevent spam clicks
+//   const aiTasks = [
+//     "Break down project requirements",
+//     "Write API design",
+//     "Implement core logic",
+//     "Add tests",
+//   ];
 
-  setIsGeneratingAI(true);
+//   return aiTasks;
+// };
 
-  try {
-    const aiTasks = await generateAITasks();
-
-    const formattedTasks = aiTasks.map((title) => ({
-      id: crypto.randomUUID(),
-      title,
-      parentId: null,
-    }));
-
-    commit([...tasks, ...formattedTasks]);
-  } finally {
-    setIsGeneratingAI(false);
-  }
-};
-
-// Real AI generation code using OpenAI API
 
 // const generateAI = async () => {
 //   if (isGeneratingAI) return;
@@ -92,12 +74,34 @@ const generateAI = async () => {
 //     }));
 
 //     commit([...tasks, ...formattedTasks]);
-//   } catch (error) {
-//     console.error("AI Error:", error);
 //   } finally {
 //     setIsGeneratingAI(false);
 //   }
 // };
+
+// Real AI generation code using OpenAI API
+
+const generateAI = async () => {
+  if (isGeneratingAI) return;
+
+  setIsGeneratingAI(true);
+
+  try {
+    const aiTasks = await generateAITasks();
+
+    const formattedTasks = aiTasks.map((title) => ({
+      id: crypto.randomUUID(),
+      title,
+      parentId: null,
+    }));
+
+    commit([...tasks, ...formattedTasks]);
+  } catch (error) {
+    console.error("AI Error:", error);
+  } finally {
+    setIsGeneratingAI(false);
+  }
+};
 
   return {
     tasks,
