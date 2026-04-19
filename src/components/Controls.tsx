@@ -1,7 +1,9 @@
+import { useState } from "react";
+
 type Props = {
   undo: () => void;
   redo: () => void;
-  generateAI: () => void;
+  generateAI: (prompt: string) => void;
   isGeneratingAI: boolean;
 };
 
@@ -11,45 +13,47 @@ export default function Controls({
   generateAI,
   isGeneratingAI,
 }: Props) {
+  const [prompt, setPrompt] = useState("");
+
+  const handleGenerate = () => {
+    if (!prompt.trim()) return;
+    generateAI(prompt);
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-slate-900 rounded-xl">
-      
-      {/* Left actions */}
-      <div className="flex gap-2">
-        <button
-          onClick={undo}
-          className="flex-1 sm:flex-none px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg"
-        >
+    <div className="bg-slate-900 p-3 rounded-xl space-y-3">
+      <input
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        disabled={isGeneratingAI}
+        placeholder="Ask AI to generate tasks..."
+        className="w-full px-3 py-2 bg-slate-800 rounded-lg"
+      />
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <button className="bg-slate-700 px-3 py-2 rounded-lg w-full sm:w-auto" onClick={undo}>
           Undo
         </button>
 
-        <button
-          onClick={redo}
-          className="flex-1 sm:flex-none px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg"
-        >
+        <button className="bg-slate-700 px-3 py-2 rounded-lg w-full sm:w-auto" onClick={redo}>
           Redo
         </button>
-      </div>
 
-      {/* AI Button */}
-      <button
-        onClick={generateAI}
-        disabled={isGeneratingAI}
-        className={`w-full sm:w-auto sm:ml-auto px-3 py-2 rounded-lg transition flex justify-center items-center ${
-          isGeneratingAI
-            ? "bg-slate-600 cursor-not-allowed"
-            : "bg-emerald-600 hover:bg-emerald-500"
-        }`}
-      >
-        {isGeneratingAI ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 bg-amber-500 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Generating...
-          </span>
-        ) : (
-          "Generate AI Tasks"
-        )}
-      </button>
+        <button
+          onClick={handleGenerate}
+          disabled={isGeneratingAI}
+          className="ml-0 sm:ml-auto w-full sm:w-auto bg-emerald-600 px-3 py-2 rounded-lg flex items-center justify-center gap-2"
+        >
+          {isGeneratingAI ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Generating...
+            </>
+          ) : (
+            "Generate AI"
+          )}
+        </button>
+      </div>
     </div>
   );
 }

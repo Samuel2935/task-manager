@@ -1,38 +1,30 @@
 import type { History } from "../domain/history";
 import type { Task } from "../domain/task.types";
 
-const HISTORY_KEY = "task-manager-history";
+const KEY = "task-history";
+const VERSION = 1;
 
 export const saveHistory = (data: History<Task[]>) => {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
+  localStorage.setItem(
+    KEY,
+    JSON.stringify({ version: VERSION, data })
+  );
 };
 
 export const loadHistory = (): History<Task[]> => {
-  const raw = localStorage.getItem(HISTORY_KEY);
+  const raw = localStorage.getItem(KEY);
 
-  if (!raw) {
-    return {
-      states: [[]],
-      index: 0,
-    };
-  }
+  if (!raw) return { states: [[]], index: 0 };
 
   try {
     const parsed = JSON.parse(raw);
 
-    // safety fallback
-    if (!parsed?.states?.length) {
-      return {
-        states: [[]],
-        index: 0,
-      };
+    if (parsed.version !== VERSION) {
+      return { states: [[]], index: 0 };
     }
 
-    return parsed;
+    return parsed.data;
   } catch {
-    return {
-      states: [[]],
-      index: 0,
-    };
+    return { states: [[]], index: 0 };
   }
 };

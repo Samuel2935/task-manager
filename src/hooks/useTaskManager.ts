@@ -8,92 +8,64 @@ import { loadHistory, saveHistory } from "../utils/storage";
 
 export const useTaskManager = () => {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // ✅ SINGLE SOURCE OF TRUTH
   const [historyState, setHistoryState] = useState<History<Task[]>>(
     loadHistory()
   );
 
-  // ✅ SAFE DERIVED STATE
-  const tasks =
-    historyState.states?.[historyState.index] ?? [];
-
-  // ======================
-  // PERSISTENCE
-  // ======================
+  const tasks = historyState.states?.[historyState.index] ?? [];
 
   useEffect(() => {
     saveHistory(historyState);
   }, [historyState]);
 
-  // ======================
-  // CORE COMMIT
-  // ======================
-
   const commit = (newTasks: Task[]) => {
-    setHistoryState((prev) => pushState(prev, newTasks));
+    setHistoryState((p) => pushState(p, newTasks));
   };
-
-  // ======================
-  // TASK ACTIONS
-  // ======================
 
   const addTask = (title: string, parentId: string | null) => {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      parentId,
-    };
+    if (!title.trim()) return;
 
-    commit([...tasks, newTask]);
+    commit([
+      ...tasks,
+      { id: crypto.randomUUID(), title, parentId },
+    ]);
   };
 
-  const deleteTask = (taskId: string) => {
-    const updated = removeTaskCascade(tasks, taskId);
-    commit(updated);
+  const deleteTask = (id: string) => {
+    commit(removeTaskCascade(tasks, id));
   };
 
-  // ======================
-  // HISTORY ACTIONS
-  // ======================
+  const undoAction = () => setHistoryState((p) => undo(p));
+  const redoAction = () => setHistoryState((p) => redo(p));
 
-  const undoAction = () => {
-    setHistoryState((prev) => undo(prev));
-  };
-
-  const redoAction = () => {
-    setHistoryState((prev) => redo(prev));
-  };
-
-  // ======================
-  // AI INTEGRATION
-  // ======================
-
-  const generateAI = async () => {
-    if (isGeneratingAI) return;
+  const generateAI = async (prompt: string) => {
+    if (!prompt.trim() || isGeneratingAI) return;
 
     setIsGeneratingAI(true);
+    setError(null);
 
     try {
-      const aiTasks = await generateAITasks();
+      const aiTasks = await generateAITasks(prompt);
 
-      const formattedTasks: Task[] = aiTasks.map((title) => ({
-        id: crypto.randomUUID(),
-        title,
-        parentId: null,
-      }));
+      const existing = new Set(tasks.map((t) => t.title));
 
-      commit([...tasks, ...formattedTasks]);
-    } catch (error) {
-      console.error("AI Error:", error);
+      const formatted: Task[] = aiTasks
+        .filter((t) => !existing.has(t))
+        .map((title) => ({
+          id: crypto.randomUUID(),
+          title,
+          parentId: null,
+        }));
+
+      commit([...tasks, ...formatted]);
+    } catch {
+      setError("AI generation failed");
     } finally {
       setIsGeneratingAI(false);
     }
   };
-
-  // ======================
-  // EXPORT API
-  // ======================
 
   return {
     tasks,
@@ -103,6 +75,6 @@ export const useTaskManager = () => {
     redoAction,
     generateAI,
     isGeneratingAI,
-    historyState,
+    error,
   };
 };

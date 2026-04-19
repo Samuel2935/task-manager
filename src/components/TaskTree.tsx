@@ -1,22 +1,29 @@
 import type { Task } from "../domain/task.types";
 import TaskNode from "./TaskNode";
 
-type Props = {
+export default function TaskTree({
+  tasks,
+  onDelete,
+}: {
   tasks: Task[];
   onDelete: (id: string) => void;
-};
-
-export default function TaskTree({ tasks, onDelete }: Props) {
+}) {
   const render = (parentId: string | null = null) =>
     tasks
-      .filter(t => t.parentId === parentId)
-      .map(task => (
-        <div className="flex items-center justify-between bg-slate-900 p-2 rounded-lg mt-2" key={task.id}>
-        <TaskNode key={task.id} task={task} onDelete={onDelete}>
-          {render(task.id)}
+      .filter((t) => t.parentId === parentId)
+      .map((t) => (
+        <TaskNode key={t.id} task={t} onDelete={onDelete}>
+          {render(t.id)}
         </TaskNode>
-        </div>
       ));
 
-  return <div className="mt-2">{render()}</div>;
+  if (!tasks.length) {
+    return (
+      <div className="text-slate-400 text-center mt-10">
+        No tasks yet. Generate something 🚀
+      </div>
+    );
+  }
+
+  return <div className="space-y-2">{render()}</div>;
 }

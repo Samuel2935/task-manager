@@ -1,24 +1,16 @@
 import type { Task } from "./task.types";
 
+export const removeTaskCascade = (tasks: Task[], id: string): Task[] => {
+  const toDelete = new Set<string>();
 
-export const getDescendants = (tasks: Task[], taskId: string): Task[] => {
-  const children = tasks.filter(t => t.parentId === taskId);
+  const dfs = (taskId: string) => {
+    toDelete.add(taskId);
+    tasks
+      .filter((t) => t.parentId === taskId)
+      .forEach((c) => dfs(c.id));
+  };
 
-  return children.reduce<Task[]>((acc, child) => {
-    return [
-      ...acc,
-      child,
-      ...getDescendants(tasks, child.id),
-    ];
-  }, []);
+  dfs(id);
+
+  return tasks.filter((t) => !toDelete.has(t.id));
 };
-
-export const removeTaskCascade = (tasks: Task[], taskId: string): Task[] => {
-  const descendants = getDescendants(tasks, taskId).map(t => t.id);
-
-  return tasks.filter(
-    t => t.id !== taskId && !descendants.includes(t.id)
-  );
-};
-
-
