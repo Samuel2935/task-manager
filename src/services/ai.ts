@@ -14,7 +14,7 @@ export const generateAITasks = async (): Promise<string[]> => {
         },
         {
           role: "user",
-          content: "Generate 5 software development tasks.",
+          content: "Generate 5 medical service tasks.",
         },
       ],
       temperature: 0.7,

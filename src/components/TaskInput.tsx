@@ -10,35 +10,48 @@ export default function TaskInput({ tasks, onAdd }: Props) {
   const [text, setText] = useState("");
   const [parentId, setParentId] = useState<string | null>(null);
 
+  const handleAdd = () => {
+    const value = text.trim();
+    if (!value) return;
+
+    onAdd(value, parentId);
+    setText("");
+    setParentId(null);
+  };
+
   return (
-    <div className="flex gap-2 p-3 bg-slate-900 rounded-xl">
+    <div className="flex flex-col sm:flex-row gap-2 p-3 bg-slate-900 rounded-xl">
+      
+      {/* Input */}
       <input
-      className="flex-1 px-3 py-2 bg-slate-800 rounded-lg outline-none"
+        className="flex-1 w-full px-3 py-2 bg-slate-800 rounded-lg outline-none placeholder:text-slate-400"
         value={text}
-        placeholder="Enter Task"
+        placeholder="Enter task..."
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleAdd();
+        }}
       />
 
+      {/* Parent selector */}
       <select
-      className="px-3 py-2 bg-slate-800 rounded-lg"
-        onChange={(e) =>
-          setParentId(e.target.value || null)
-        }
+        className="w-full sm:w-auto px-3 py-2 bg-slate-800 rounded-lg text-slate-200"
+        value={parentId ?? ""}
+        onChange={(e) => setParentId(e.target.value || null)}
       >
         <option value="">No Parent</option>
-        {tasks.map(t => (
+        {tasks.map((t) => (
           <option key={t.id} value={t.id}>
             {t.title}
           </option>
         ))}
       </select>
 
+      {/* Button */}
       <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg"
-        onClick={() => {
-          onAdd(text, parentId);
-          setText("");
-        }}
+        onClick={handleAdd}
+        className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition disabled:bg-slate-600 disabled:cursor-not-allowed"
+        disabled={!text.trim()}
       >
         Add
       </button>

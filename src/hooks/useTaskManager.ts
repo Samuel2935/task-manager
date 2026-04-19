@@ -1,24 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Task } from "../domain/task.types";
 import { removeTaskCascade } from "../domain/dependency";
 import { pushState, undo, redo } from "../domain/history";
 import type { History } from "../domain/history";
 import { generateAITasks } from "../services/ai";
-
+import { loadHistory, saveHistory } from "../utils/storage";
 
 export const useTaskManager = () => {
-const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
-  const [historyState, setHistoryState] = useState<History<Task[]>>({
-    states: [[]],
-    index: 0,
-  });
+  // ✅ SINGLE SOURCE OF TRUTH
+  const [historyState, setHistoryState] = useState<History<Task[]>>(
+    loadHistory()
+  );
 
-  const tasks = historyState.states[historyState.index];
+  // ✅ SAFE DERIVED STATE
+  const tasks =
+    historyState.states?.[historyState.index] ?? [];
+
+  // ======================
+  // PERSISTENCE
+  // ======================
+
+  useEffect(() => {
+    saveHistory(historyState);
+  }, [historyState]);
+
+  // ======================
+  // CORE COMMIT
+  // ======================
 
   const commit = (newTasks: Task[]) => {
-    setHistoryState(prev => pushState(prev, newTasks));
+    setHistoryState((prev) => pushState(prev, newTasks));
   };
+
+  // ======================
+  // TASK ACTIONS
+  // ======================
 
   const addTask = (title: string, parentId: string | null) => {
     const newTask: Task = {
@@ -35,73 +53,47 @@ const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     commit(updated);
   };
 
+  // ======================
+  // HISTORY ACTIONS
+  // ======================
+
   const undoAction = () => {
-    setHistoryState(prev => undo(prev));
+    setHistoryState((prev) => undo(prev));
   };
 
   const redoAction = () => {
-    setHistoryState(prev => redo(prev));
+    setHistoryState((prev) => redo(prev));
   };
 
+  // ======================
+  // AI INTEGRATION
+  // ======================
 
+  const generateAI = async () => {
+    if (isGeneratingAI) return;
 
-//  const generateAITasks = async () => {
-//   await new Promise((res) => setTimeout(res, 2000));
+    setIsGeneratingAI(true);
 
-//   const aiTasks = [
-//     "Break down project requirements",
-//     "Write API design",
-//     "Implement core logic",
-//     "Add tests",
-//   ];
+    try {
+      const aiTasks = await generateAITasks();
 
-//   return aiTasks;
-// };
+      const formattedTasks: Task[] = aiTasks.map((title) => ({
+        id: crypto.randomUUID(),
+        title,
+        parentId: null,
+      }));
 
+      commit([...tasks, ...formattedTasks]);
+    } catch (error) {
+      console.error("AI Error:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
-// const generateAI = async () => {
-//   if (isGeneratingAI) return;
-
-//   setIsGeneratingAI(true);
-
-//   try {
-//     const aiTasks = await generateAITasks();
-
-//     const formattedTasks = aiTasks.map((title) => ({
-//       id: crypto.randomUUID(),
-//       title,
-//       parentId: null,
-//     }));
-
-//     commit([...tasks, ...formattedTasks]);
-//   } finally {
-//     setIsGeneratingAI(false);
-//   }
-// };
-
-// Real AI generation code using OpenAI API
-
-const generateAI = async () => {
-  if (isGeneratingAI) return;
-
-  setIsGeneratingAI(true);
-
-  try {
-    const aiTasks = await generateAITasks();
-
-    const formattedTasks = aiTasks.map((title) => ({
-      id: crypto.randomUUID(),
-      title,
-      parentId: null,
-    }));
-
-    commit([...tasks, ...formattedTasks]);
-  } catch (error) {
-    console.error("AI Error:", error);
-  } finally {
-    setIsGeneratingAI(false);
-  }
-};
+  // ======================
+  // EXPORT API
+  // ======================
 
   return {
     tasks,
@@ -109,8 +101,8 @@ const generateAI = async () => {
     deleteTask,
     undoAction,
     redoAction,
-    historyState,
     generateAI,
     isGeneratingAI,
+    historyState,
   };
 };
